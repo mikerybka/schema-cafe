@@ -1,0 +1,7 @@
+www.schema.cafe {
+    reverse_proxy frontend:8080
+}
+
+schema.cafe {
+    redir https://www.schema.cafe{uri}
+}

@@ -4,5 +4,21 @@ volumes:
 services:
   files:
     build: files
+    volumes:
+      - files:/data
+  schemas:
+    build: schemas
+    environment:
+      - DATA_URL=http://files:8080/schemas
     ports:
-    - 8080:8080
+      - 8080:8080
+  # users:
+  #   build: users
+  # teams:
+  #   build: teams
+  # api:
+  #   build: api
+  # frontend:
+  #   build: frontend
+  # gateway:
+  #   build: gateway
