@@ -1,0 +1,8 @@
+volumes:
+  files:
+
+services:
+  files:
+    build: files
+    ports:
+    - 8080:8080
