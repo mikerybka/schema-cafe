@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -10,6 +11,12 @@ import (
 )
 
 const baseDir = "./data"
+
+// DirEntry represents a single file or directory in JSON.
+type DirEntry struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
 
 func main() {
 	http.HandleFunc("/", handleRequest)
@@ -31,21 +38,59 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleGet serves files from the `baseDir` directory.
+// handleGet serves files from baseDir or returns a JSON directory listing.
 func handleGet(w http.ResponseWriter, r *http.Request) {
-	// Clean and convert the URL path into an OS-friendly path
+	// Convert URL path to a local path under baseDir
 	path := filepath.Join(baseDir, filepath.FromSlash(strings.TrimPrefix(r.URL.Path, "/")))
 
-	// Use http.ServeFile for convenience
+	info, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "404 not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if info.IsDir() {
+		// Return JSON list of dir entries
+		files, err := os.ReadDir(path)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		entries := []DirEntry{}
+		for _, f := range files {
+			entryType := "file"
+			if f.IsDir() {
+				entryType = "dir"
+			}
+
+			entries = append(entries, DirEntry{
+				Name: f.Name(),
+				Type: entryType,
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(entries); err != nil {
+			http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// If it's a file, just serve it
 	http.ServeFile(w, r, path)
 }
 
-// handlePut writes the request body to a file under the `baseDir` directory.
+// handlePut writes the request body to a file under baseDir.
 func handlePut(w http.ResponseWriter, r *http.Request) {
-	// Clean and convert the URL path
+	// Convert URL path to a local file path under baseDir
 	path := filepath.Join(baseDir, filepath.FromSlash(strings.TrimPrefix(r.URL.Path, "/")))
 
-	// Create the necessary directories
+	// Create intermediate directories if necessary
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		http.Error(w, "Could not create directories", http.StatusInternalServerError)
 		return
@@ -59,12 +104,11 @@ func handlePut(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Copy the request body into the file
+	// Copy request body into the file
 	if _, err := io.Copy(file, r.Body); err != nil {
 		http.Error(w, "Error writing file", http.StatusInternalServerError)
 		return
 	}
 
-	// Indicate that the resource was created or overwritten
 	w.WriteHeader(http.StatusCreated)
 }
