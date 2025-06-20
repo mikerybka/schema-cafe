@@ -8,6 +8,9 @@ import (
 )
 
 func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "hi")
+	})
 	port := util.EnvVar("PORT", "2069")
 	addr := ":" + port
 	err := http.ListenAndServe(addr, nil)
