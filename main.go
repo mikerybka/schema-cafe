@@ -27,6 +27,33 @@ type SchemaCafe struct {
 
 func (cafe *SchemaCafe) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(cafe.DataDir, r.URL.Path)
+	if r.Method == "PUT" {
+		err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		f, err := os.Create(path)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer f.Close()
+		_, err = io.Copy(f, r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
+	if r.Method == "DELETE" {
+		err := os.Remove(path)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
 	fi, err := os.Stat(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
