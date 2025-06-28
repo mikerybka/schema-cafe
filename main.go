@@ -1,10 +1,17 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"net/http"
 	"os"
 )
+
+//go:embed main.css
+var css string
+
+//go:embed main.js
+var js string
 
 func main() {
 	port := os.Getenv("PORT")
@@ -29,12 +36,12 @@ func main() {
 
 	http.HandleFunc("/main.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
-		fmt.Fprint(w, `console.log("Hello from main.js");`)
+		fmt.Fprint(w, js)
 	})
 
 	http.HandleFunc("/main.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
-		fmt.Fprint(w, `body { font-family: sans-serif; background: #f0f0f0; }`)
+		fmt.Fprint(w, css)
 	})
 
 	fmt.Printf("Server listening on port %s...\n", port)
