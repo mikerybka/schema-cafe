@@ -19305,8 +19305,9 @@
     "main.tsx"() {
       var import_react = __toESM(require_react());
       var import_client = __toESM(require_client());
+      var data = JSON.parse(document.getElementById("data").textContent);
       function App() {
-        return /* @__PURE__ */ import_react.default.createElement("div", null, "hi!");
+        return /* @__PURE__ */ import_react.default.createElement("div", null, JSON.stringify(data));
       }
       var root = import_client.default.createRoot(document.getElementById("root"));
       root.render(/* @__PURE__ */ import_react.default.createElement(App, null));
