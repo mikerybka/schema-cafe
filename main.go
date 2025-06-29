@@ -24,12 +24,11 @@ func main() {
 		fmt.Fprint(w, `<!DOCTYPE html>
 <html>
 <head>
-  <title>Simple Page</title>
   <link rel="stylesheet" href="/main.css">
 </head>
 <body>
   <div id="root"></div>
-  <script src="/main.js"></script>
+  <script  type="module"  src="/main.js"></script>
 </body>
 </html>`)
 	})
