@@ -18,6 +18,9 @@ var css string
 //go:embed main.js
 var js string
 
+//go:embed favicon.ico
+var favicon []byte
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -53,6 +56,11 @@ func main() {
 	http.HandleFunc("/main.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
 		fmt.Fprint(w, css)
+	})
+
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/x-icon")
+		w.Write(favicon)
 	})
 
 	fmt.Printf("Server listening on port %s...\n", port)
