@@ -19327,16 +19327,43 @@
         return /* @__PURE__ */ import_react.default.createElement("div", null, props.path);
       }
       function Schema(props) {
+        const [error, setError] = (0, import_react.useState)("");
         const [fields, setFields] = (0, import_react.useState)(props.fields);
+        const [saving, setSaving] = (0, import_react.useState)(false);
         const createField = () => {
           setFields([...fields, { name: "", type: "" }]);
         };
         const deleteField = (index) => {
           setFields((fields2) => fields2.filter((f, i) => i !== index));
         };
+        const setFieldName = (index, name) => {
+          setFields((fields2) => fields2.map((f, i) => i === index ? { ...f, name } : f));
+        };
+        const setFieldType = (index, type) => {
+          setFields((fields2) => fields2.map((f, i) => i === index ? { ...f, type } : f));
+        };
+        const save = () => {
+          setSaving(true);
+          fetch(path, {
+            method: "PUT",
+            body: JSON.stringify({
+              fields
+            })
+          }).then((res) => {
+            if (res.ok) {
+              setSaving(false);
+            } else {
+              console.log(res);
+              res.text().then((text) => {
+                setError(text);
+                console.log(text);
+              });
+            }
+          });
+        };
         return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement(TitleBar, { path: props.path }), /* @__PURE__ */ import_react.default.createElement(List, { title: "Fields", onCreate: createField }, fields.map((f, i) => {
           return /* @__PURE__ */ import_react.default.createElement(ListItem, { key: i, onDelete: () => deleteField(i) }, /* @__PURE__ */ import_react.default.createElement(StringInput, { label: "Name", value: f.name, onChange: (name) => setFieldName(i, name) }), /* @__PURE__ */ import_react.default.createElement(StringInput, { label: "Type", value: f.type, onChange: (type) => setFieldType(i, type) }));
-        })));
+        })), /* @__PURE__ */ import_react.default.createElement(Button, { onClick: save, disabled: saving }, "Save"), /* @__PURE__ */ import_react.default.createElement("div", null, error));
       }
       function StringInput(props) {
       }
