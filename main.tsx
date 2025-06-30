@@ -93,14 +93,6 @@ function Schema(props: {
     </div>
 }
 
-function Field(props: {
-    name: string;
-    setName: (name: string)=> void;
-    type: string;
-    setType: (type: string)=> void;
-}) {
-
-}
 
 function StringInput(props: {
     label: string;
