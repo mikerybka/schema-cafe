@@ -27,7 +27,7 @@ func main() {
 		port = "2069"
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 
 		data, ok := getData(filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path))
@@ -48,17 +48,35 @@ func main() {
 </html>`, data)
 	})
 
-	http.HandleFunc("/main.js", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("PUT /", func(w http.ResponseWriter, r *http.Request) {
+		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path)
+		s := &Schema{}
+		json.NewDecoder(r.Body).Decode(s)
+		err := util.WriteJSONFile(path, s)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
+	http.HandleFunc("DELETE /", func(w http.ResponseWriter, r *http.Request) {
+		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path)
+		err := os.Remove(path)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
+	http.HandleFunc("GET /main.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
 		fmt.Fprint(w, js)
 	})
 
-	http.HandleFunc("/main.css", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("GET /main.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
 		fmt.Fprint(w, css)
 	})
 
-	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/x-icon")
 		w.Write(favicon)
 	})

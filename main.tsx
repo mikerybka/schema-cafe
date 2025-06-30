@@ -33,8 +33,8 @@ function Dir(props: { path: string; contents: { name: string; type: string }[] }
     </ul>
 }
 
-function TitleBar(props:{path: string}) {
-    return <div>{props.path}</div>
+function TitleBar() {
+    return <div>{path}</div>
 }
 
 function Schema(props: {
@@ -48,16 +48,16 @@ function Schema(props: {
     const [fields, setFields] = useState(props.fields);
     const [saving, setSaving] = useState(false);
     const createField = () => {
-        setFields([...fields, {name:"", type:""}])
+        setFields([...fields, { name: "", type: "" }])
     }
     const deleteField = (index: number) => {
         setFields(fields => fields.filter((f, i) => i !== index));
     }
     const setFieldName = (index: number, name: string) => {
-        setFields(fields => fields.map((f, i) => i === index ? {...f, name} : f));
+        setFields(fields => fields.map((f, i) => i === index ? { ...f, name } : f));
     }
     const setFieldType = (index: number, type: string) => {
-        setFields(fields => fields.map((f, i) => i === index ? {...f, type} : f));
+        setFields(fields => fields.map((f, i) => i === index ? { ...f, type } : f));
     }
     const save = () => {
         setSaving(true);
@@ -72,14 +72,13 @@ function Schema(props: {
             } else {
                 console.log(res);
                 res.text().then(text => {
-                    setError(text);    
+                    setError(text);
                     console.log(text);
                 });
             }
         })
     }
     return <div>
-        <TitleBar path={props.path} />
         <List title="Fields" onCreate={createField}>
             {fields.map((f, i) => {
                 return <ListItem key={i} onDelete={() => deleteField(i)}>
@@ -93,16 +92,61 @@ function Schema(props: {
     </div>
 }
 
+function Button(props: {
+    onClick: () => void;
+    disabled?: boolean;
+    children: any;
+}) {
+    return <button onClick={props.onClick} disabled={props.disabled}>{props.children}</button>
+}
+
+function List(props: {title: string; onCreate: () => void; children: any}) {
+    return <div>
+        <div>{props.title}</div>
+        {props.children}
+        <Button onClick={props.onCreate}>+</Button>
+    </div>
+}
+
+function ListItem(props: {
+    onDelete: () => void;
+    children: any;
+}) {
+    return (
+        <div style={{ position: 'relative', padding: '1rem', border: '1px solid #ccc' }}>
+          <button
+            onClick={props.onDelete}
+            style={{
+              position: 'absolute',
+              top: '0.5rem',
+              right: '0.5rem',
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.25rem',
+              cursor: 'pointer',
+            }}
+            aria-label="Close"
+          >
+            Del
+          </button>
+          {props.children}
+        </div>
+      );
+}
+
 
 function StringInput(props: {
     label: string;
     value: string;
     onChange: (s: string) => void;
 }) {
-
+    return <div>
+        <div>{props.label}:</div>
+        <input type='text' value={props.value} onChange={e => props.onChange(e.target.value)} />
+    </div>
 }
 
-function App() {
+function Data() {
     if (data.type === "dir") {
         return <Dir path={path} contents={data.value} />
     }
@@ -113,4 +157,8 @@ function App() {
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(<App />);
+root.render(<div>
+    <TitleBar />
+    <Data />
+</div>
+);

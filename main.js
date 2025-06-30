@@ -19323,8 +19323,8 @@
           return /* @__PURE__ */ import_react.default.createElement("li", { key: c.name }, /* @__PURE__ */ import_react.default.createElement("a", { href: joinPath(props.path + id(c.name)) }, c.name));
         }));
       }
-      function TitleBar(props) {
-        return /* @__PURE__ */ import_react.default.createElement("div", null, props.path);
+      function TitleBar() {
+        return /* @__PURE__ */ import_react.default.createElement("div", null, path);
       }
       function Schema(props) {
         const [error, setError] = (0, import_react.useState)("");
@@ -19361,13 +19361,39 @@
             }
           });
         };
-        return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement(TitleBar, { path: props.path }), /* @__PURE__ */ import_react.default.createElement(List, { title: "Fields", onCreate: createField }, fields.map((f, i) => {
+        return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement(List, { title: "Fields", onCreate: createField }, fields.map((f, i) => {
           return /* @__PURE__ */ import_react.default.createElement(ListItem, { key: i, onDelete: () => deleteField(i) }, /* @__PURE__ */ import_react.default.createElement(StringInput, { label: "Name", value: f.name, onChange: (name) => setFieldName(i, name) }), /* @__PURE__ */ import_react.default.createElement(StringInput, { label: "Type", value: f.type, onChange: (type) => setFieldType(i, type) }));
         })), /* @__PURE__ */ import_react.default.createElement(Button, { onClick: save, disabled: saving }, "Save"), /* @__PURE__ */ import_react.default.createElement("div", null, error));
       }
-      function StringInput(props) {
+      function Button(props) {
+        return /* @__PURE__ */ import_react.default.createElement("button", { onClick: props.onClick, disabled: props.disabled }, props.children);
       }
-      function App() {
+      function List(props) {
+        return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", null, props.title), props.children, /* @__PURE__ */ import_react.default.createElement(Button, { onClick: props.onCreate }, "+"));
+      }
+      function ListItem(props) {
+        return /* @__PURE__ */ import_react.default.createElement("div", { style: { position: "relative", padding: "1rem", border: "1px solid #ccc" } }, /* @__PURE__ */ import_react.default.createElement(
+          "button",
+          {
+            onClick: props.onDelete,
+            style: {
+              position: "absolute",
+              top: "0.5rem",
+              right: "0.5rem",
+              background: "transparent",
+              border: "none",
+              fontSize: "1.25rem",
+              cursor: "pointer"
+            },
+            "aria-label": "Close"
+          },
+          "Del"
+        ), props.children);
+      }
+      function StringInput(props) {
+        return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", null, props.label, ":"), /* @__PURE__ */ import_react.default.createElement("input", { type: "text", value: props.value, onChange: (e) => props.onChange(e.target.value) }));
+      }
+      function Data() {
         if (data.type === "dir") {
           return /* @__PURE__ */ import_react.default.createElement(Dir, { path, contents: data.value });
         }
@@ -19377,7 +19403,9 @@
         return /* @__PURE__ */ import_react.default.createElement("div", null, JSON.stringify(data));
       }
       var root = import_client.default.createRoot(document.getElementById("root"));
-      root.render(/* @__PURE__ */ import_react.default.createElement(App, null));
+      root.render(
+        /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement(TitleBar, null), /* @__PURE__ */ import_react.default.createElement(Data, null))
+      );
     }
   });
   require_main();
