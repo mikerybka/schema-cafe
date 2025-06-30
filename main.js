@@ -19306,7 +19306,47 @@
       var import_react = __toESM(require_react());
       var import_client = __toESM(require_client());
       var data = JSON.parse(document.getElementById("data").textContent);
+      var path = window.location.pathname;
+      function joinPath(...parts) {
+        return parts.filter(Boolean).map((part, index) => {
+          if (index > 0) part = part.replace(/^\/+/, "");
+          if (index < parts.length - 1) part = part.replace(/\/+$/, "");
+          return part;
+        }).join("/");
+      }
+      function id(s) {
+        return s;
+      }
+      function Dir(props) {
+        console.log(path);
+        return /* @__PURE__ */ import_react.default.createElement("ul", null, props.contents.map((c) => {
+          return /* @__PURE__ */ import_react.default.createElement("li", { key: c.name }, /* @__PURE__ */ import_react.default.createElement("a", { href: joinPath(props.path + id(c.name)) }, c.name));
+        }));
+      }
+      function TitleBar(props) {
+        return /* @__PURE__ */ import_react.default.createElement("div", null, props.path);
+      }
+      function Schema(props) {
+        const [fields, setFields] = (0, import_react.useState)(props.fields);
+        const createField = () => {
+          setFields([...fields, { name: "", type: "" }]);
+        };
+        const deleteField = (index) => {
+          setFields((fields2) => fields2.filter((f, i) => i !== index));
+        };
+        return /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement(TitleBar, { path: props.path }), /* @__PURE__ */ import_react.default.createElement(List, { title: "Fields", onCreate: createField }, fields.map((f, i) => {
+          return /* @__PURE__ */ import_react.default.createElement(ListItem, { key: i, onDelete: () => deleteField(i) }, /* @__PURE__ */ import_react.default.createElement(StringInput, { label: "Name", value: f.name, onChange: (name) => setFieldName(i, name) }), /* @__PURE__ */ import_react.default.createElement(StringInput, { label: "Type", value: f.type, onChange: (type) => setFieldType(i, type) }));
+        })));
+      }
+      function StringInput(props) {
+      }
       function App() {
+        if (data.type === "dir") {
+          return /* @__PURE__ */ import_react.default.createElement(Dir, { path, contents: data.value });
+        }
+        if (data.type === "schema") {
+          return /* @__PURE__ */ import_react.default.createElement(Schema, { path, fields: data.value.fields });
+        }
         return /* @__PURE__ */ import_react.default.createElement("div", null, JSON.stringify(data));
       }
       var root = import_client.default.createRoot(document.getElementById("root"));
