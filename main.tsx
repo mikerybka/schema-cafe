@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
+import { Dialog } from '@headlessui/react'
+import './dialog.css' // Make sure to import the CSS
+
 
 const data = JSON.parse(document.getElementById('data')!.textContent!);
 const path = window.location.pathname;
 
-function joinPath(...parts: string[]): string {
+function filepathJoin(...parts: string[]): string {
     return parts
         .filter(Boolean)
         .map((part, index) => {
@@ -23,14 +26,65 @@ function id(s: string) {
 
 
 function Dir(props: { path: string; contents: { name: string; type: string }[] }) {
-    console.log(path)
-    return <ul>
-        {props.contents.map(c => {
-            return <li key={c.name}>
-                <a href={joinPath(props.path, id(c.name))}>{c.name}</a>
-            </li>
-        })}
-    </ul>
+    const [contents, setContents] = useState(props.contents);
+    const [creating, setCreating] = useState(false);
+
+    const refresh = () => {
+        fetch(props.path, {
+            headers: {
+                'Accept': 'application/json',
+            },
+        }).then(res => res.json()).then(d => setContents(d.value));
+    }
+
+    return <>
+        <ul>
+            {contents.map(c => {
+                return <li key={c.name}>
+                    <a href={filepathJoin(props.path, id(c.name))}>{c.name}</a>
+                </li>
+            })}
+        </ul>
+        <button onClick={() => setCreating(true)}>New</button>
+        <CreateModal isOpen={creating} onClose={() => {
+            setCreating(false);
+            refresh();
+        }} />
+    </>
+}
+
+
+function CreateModal({ isOpen, onClose }) {
+    const [name, setName] = useState("")
+    const [error, setError] = useState("")
+
+    return (
+        <Dialog open={isOpen} onClose={onClose} className="dialog-overlay">
+            <div className="dialog-backdrop" aria-hidden="true" />
+            <div className="dialog-container">
+                <Dialog.Panel className="dialog-panel">
+                    <Dialog.Title className="dialog-title"></Dialog.Title>
+                    <Dialog.Description className="dialog-description">
+                    </Dialog.Description>
+                    <StringInput label='Name' value={name} onChange={setName} />
+                    <div>{error}</div>
+                    <button onClick={() => {
+                        const p = filepathJoin(path, name)
+                        fetch(p, {
+                            method: "PUT",
+                            body: JSON.stringify({ fields: [] }),
+                        }).then(res => {
+                            if (res.ok) {
+                                window.location.pathname = p
+                            } else {
+                                res.text().then(t => setError(t))
+                            }
+                        }).catch(err => setError(err));
+                    }}>Create</button>
+                </Dialog.Panel>
+            </div>
+        </Dialog>
+    )
 }
 
 function TitleBar() {
@@ -100,7 +154,7 @@ function Button(props: {
     return <button onClick={props.onClick} disabled={props.disabled}>{props.children}</button>
 }
 
-function List(props: {title: string; onCreate: () => void; children: any}) {
+function List(props: { title: string; onCreate: () => void; children: any }) {
     return <div>
         <div>{props.title}</div>
         {props.children}
@@ -114,24 +168,24 @@ function ListItem(props: {
 }) {
     return (
         <div style={{ position: 'relative', padding: '1rem', border: '1px solid #ccc' }}>
-          <button
-            onClick={props.onDelete}
-            style={{
-              position: 'absolute',
-              top: '0.5rem',
-              right: '0.5rem',
-              background: 'transparent',
-              border: 'none',
-              fontSize: '1.25rem',
-              cursor: 'pointer',
-            }}
-            aria-label="Close"
-          >
-            Del
-          </button>
-          {props.children}
+            <button
+                onClick={props.onDelete}
+                style={{
+                    position: 'absolute',
+                    top: '0.5rem',
+                    right: '0.5rem',
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '1.25rem',
+                    cursor: 'pointer',
+                }}
+                aria-label="Close"
+            >
+                Del
+            </button>
+            {props.children}
         </div>
-      );
+    );
 }
 
 

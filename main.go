@@ -28,24 +28,27 @@ func main() {
 	}
 
 	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-
 		data, ok := getData(filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path))
 		if !ok {
 			http.NotFound(w, r)
 			return
 		}
-		fmt.Fprintf(w, `<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" href="/main.css">
-</head>
-<body>
-  <div id="root"></div>
-  <script id="data" type="application/json">%s</script>
-  <script src="/main.js"></script>
-</body>
-</html>`, data)
+		if util.Accept(r, "text/html") {
+			w.Header().Set("Content-Type", "text/html")
+			fmt.Fprintf(w, `<!DOCTYPE html>
+	<html>
+	<head>
+	  <link rel="stylesheet" href="/main.css">
+	</head>
+	<body>
+	  <div id="root"></div>
+	  <script id="data" type="application/json">%s</script>
+	  <script src="/main.js"></script>
+	</body>
+	</html>`, data)
+			return
+		}
+		w.Write(data)
 	})
 
 	http.HandleFunc("PUT /", func(w http.ResponseWriter, r *http.Request) {
