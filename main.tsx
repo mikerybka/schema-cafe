@@ -27,7 +27,7 @@ function Dir(props: { path: string; contents: { name: string; type: string }[] }
     return <ul>
         {props.contents.map(c => {
             return <li key={c.name}>
-                <a href={joinPath(props.path + id(c.name))}>{c.name}</a>
+                <a href={joinPath(props.path, id(c.name))}>{c.name}</a>
             </li>
         })}
     </ul>
