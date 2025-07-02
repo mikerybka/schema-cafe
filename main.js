@@ -19320,7 +19320,7 @@
       function Dir(props) {
         console.log(path);
         return /* @__PURE__ */ import_react.default.createElement("ul", null, props.contents.map((c) => {
-          return /* @__PURE__ */ import_react.default.createElement("li", { key: c.name }, /* @__PURE__ */ import_react.default.createElement("a", { href: joinPath(props.path + id(c.name)) }, c.name));
+          return /* @__PURE__ */ import_react.default.createElement("li", { key: c.name }, /* @__PURE__ */ import_react.default.createElement("a", { href: joinPath(props.path, id(c.name)) }, c.name));
         }));
       }
       function TitleBar() {
