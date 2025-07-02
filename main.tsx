@@ -87,8 +87,27 @@ function CreateModal({ isOpen, onClose }) {
     )
 }
 
+function popPath(path) {
+    if (typeof path !== 'string') return ''
+    
+    const parts = path.split('/').filter(Boolean)
+    parts.pop()
+    return '/' + parts.join('/')
+}
+
 function TitleBar() {
-    return <div>{path}</div>
+    return <div>
+        <div>{path}</div>
+        <button onClick={() => {
+            fetch(path, {
+                method: "DELETE",
+            }).then(res => {
+                if (res.ok) {
+                    window.location.pathname = popPath(path)
+                } 
+            })
+        }}>Delete</button>
+    </div>
 }
 
 function Schema(props: {

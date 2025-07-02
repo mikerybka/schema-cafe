@@ -28271,8 +28271,22 @@
           }).catch((err) => setError(err));
         } }, "Create"))));
       }
+      function popPath(path2) {
+        if (typeof path2 !== "string") return "";
+        const parts = path2.split("/").filter(Boolean);
+        parts.pop();
+        return "/" + parts.join("/");
+      }
       function TitleBar() {
-        return /* @__PURE__ */ import_react87.default.createElement("div", null, path);
+        return /* @__PURE__ */ import_react87.default.createElement("div", null, /* @__PURE__ */ import_react87.default.createElement("div", null, path), /* @__PURE__ */ import_react87.default.createElement("button", { onClick: () => {
+          fetch(path, {
+            method: "DELETE"
+          }).then((res) => {
+            if (res.ok) {
+              window.location.pathname = popPath(path);
+            }
+          });
+        } }, "Delete"));
       }
       function Schema(props) {
         const [error2, setError] = (0, import_react87.useState)("");
