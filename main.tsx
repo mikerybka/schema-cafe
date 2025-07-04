@@ -170,6 +170,8 @@ root.render(<div>
 </div>
 );
 
+function GenericObject() {}
+
 function Schema(props: {
     path: string;
     fields: {
