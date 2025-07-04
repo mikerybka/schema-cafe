@@ -110,6 +110,66 @@ function TitleBar() {
     </div>
 }
 
+function Button(props: {
+    onClick: () => void;
+    disabled?: boolean;
+    children: any;
+}) {
+    return <button onClick={props.onClick} disabled={props.disabled}>{props.children}</button>
+}
+
+function List(props: { title: string; onCreate: () => void; children: any }) {
+    return <div>
+        <div>{props.title}</div>
+        {props.children}
+        <Button onClick={props.onCreate}>+</Button>
+    </div>
+}
+
+function ListItem(props: {
+    onDelete: () => void;
+    children: any;
+}) {
+    return (
+        <div style={{ position: 'relative', padding: '1rem', border: '1px solid #ccc' }}>
+            <button
+                onClick={props.onDelete}
+                style={{
+                    position: 'absolute',
+                    top: '0.5rem',
+                    right: '0.5rem',
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '1.25rem',
+                    cursor: 'pointer',
+                }}
+                aria-label="Close"
+            >
+                Del
+            </button>
+            {props.children}
+        </div>
+    );
+}
+
+function StringInput(props: {
+    label: string;
+    value: string;
+    onChange: (s: string) => void;
+}) {
+    return <div>
+        <div>{props.label}:</div>
+        <input type='text' value={props.value} onChange={e => props.onChange(e.target.value)} />
+    </div>
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+root.render(<div>
+    <TitleBar />
+    <Data />
+</div>
+);
+
 function Schema(props: {
     path: string;
     fields: {
@@ -165,60 +225,6 @@ function Schema(props: {
     </div>
 }
 
-function Button(props: {
-    onClick: () => void;
-    disabled?: boolean;
-    children: any;
-}) {
-    return <button onClick={props.onClick} disabled={props.disabled}>{props.children}</button>
-}
-
-function List(props: { title: string; onCreate: () => void; children: any }) {
-    return <div>
-        <div>{props.title}</div>
-        {props.children}
-        <Button onClick={props.onCreate}>+</Button>
-    </div>
-}
-
-function ListItem(props: {
-    onDelete: () => void;
-    children: any;
-}) {
-    return (
-        <div style={{ position: 'relative', padding: '1rem', border: '1px solid #ccc' }}>
-            <button
-                onClick={props.onDelete}
-                style={{
-                    position: 'absolute',
-                    top: '0.5rem',
-                    right: '0.5rem',
-                    background: 'transparent',
-                    border: 'none',
-                    fontSize: '1.25rem',
-                    cursor: 'pointer',
-                }}
-                aria-label="Close"
-            >
-                Del
-            </button>
-            {props.children}
-        </div>
-    );
-}
-
-
-function StringInput(props: {
-    label: string;
-    value: string;
-    onChange: (s: string) => void;
-}) {
-    return <div>
-        <div>{props.label}:</div>
-        <input type='text' value={props.value} onChange={e => props.onChange(e.target.value)} />
-    </div>
-}
-
 function Data() {
     if (data.type === "dir") {
         return <Dir path={path} contents={data.value} />
@@ -228,10 +234,3 @@ function Data() {
     }
     return <div>{JSON.stringify(data)}</div>
 }
-
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(<div>
-    <TitleBar />
-    <Data />
-</div>
-);
