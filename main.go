@@ -38,7 +38,7 @@ func main() {
 			fmt.Fprintf(w, `<!DOCTYPE html>
 	<html>
 	<head>
-	  <link rel="stylesheet" href="/main.css">
+	  <link rel="stylesheet" href="https://brass.dev/main.css">
 	</head>
 	<body>
 	  <div id="root"></div>
