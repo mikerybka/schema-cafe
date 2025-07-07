@@ -43,7 +43,7 @@ func main() {
 	<body>
 	  <div id="root"></div>
 	  <script id="data" type="application/json">%s</script>
-	  <script src="/main.js"></script>
+	  <script src="https://brass.dev/main.js"></script>
 	</body>
 	</html>`, data)
 			return
