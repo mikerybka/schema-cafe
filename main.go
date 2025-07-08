@@ -47,14 +47,14 @@ func main() {
 
 	http.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
 		req := &struct {
-			Name string `json:"name"`
+			ID string `json:"id"`
 		}{}
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path, req.Name)
+		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path, req.ID)
 		s := &Schema{}
 		err = util.WriteJSONFile(path, s)
 		if err != nil {
