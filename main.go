@@ -23,7 +23,7 @@ func main() {
 	}
 
 	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		data, ok := getData(filepath.Join(util.HomeDir(), "schemas", r.URL.Path) + ".json")
+		data, ok := getData(filepath.Join(util.HomeDir(), "schemas", r.URL.Path))
 		if !ok {
 			http.NotFound(w, r)
 			return
@@ -99,60 +99,60 @@ func main() {
 }
 
 func getData(path string) ([]byte, bool) {
-	fi, err := os.Stat(path)
+	_, err := os.Stat(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, false
+			s := &Schema{}
+			f, err := os.Open(path + ".json")
+			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return nil, false
+				}
+				panic(err)
+			}
+			err = json.NewDecoder(f).Decode(s)
+			if err != nil {
+				panic(err)
+			}
+			b, err := json.Marshal(Response{
+				Type:  "schema",
+				Value: s,
+			})
+			if err != nil {
+				panic(err)
+			}
+			return b, true
 		}
 		panic(err)
 	}
-	if fi.IsDir() {
-		entries, err := os.ReadDir(path)
-		if err != nil {
-			panic(err)
-		}
-		data := []DirEntry{}
-		for _, e := range entries {
-			if !strings.HasSuffix(e.Name(), ".json") {
-				continue
-			}
-			entry := DirEntry{
-				Name: strings.TrimSuffix(e.Name(), ".json"),
-			}
-			if e.IsDir() {
-				entry.Type = "dir"
-			} else {
-				entry.Type = "schema"
-			}
-			data = append(data, entry)
-		}
-		b, err := json.Marshal(Response{
-			Type:  "dir",
-			Value: data,
-		})
-		if err != nil {
-			panic(err)
-		}
-		return b, true
-	} else {
-		s := &Schema{}
-		f, err := os.Open(path)
-		if err != nil {
-			panic(err)
-		}
-		err = json.NewDecoder(f).Decode(s)
-		if err != nil {
-			panic(err)
-		}
-		b, err := json.Marshal(Response{
-			Type:  "schema",
-			Value: s,
-		})
-		if err != nil {
-			panic(err)
-		}
-		return b, true
+
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		panic(err)
 	}
+	data := []DirEntry{}
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		entry := DirEntry{
+			Name: strings.TrimSuffix(e.Name(), ".json"),
+		}
+		if e.IsDir() {
+			entry.Type = "dir"
+		} else {
+			entry.Type = "schema"
+		}
+		data = append(data, entry)
+	}
+	b, err := json.Marshal(Response{
+		Type:  "dir",
+		Value: data,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return b, true
 }
 
 type Response struct {
