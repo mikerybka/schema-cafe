@@ -12,12 +12,6 @@ import (
 	"github.com/mikerybka/util"
 )
 
-//go:embed main.css
-var css string
-
-//go:embed main.js
-var js string
-
 //go:embed favicon.ico
 var favicon []byte
 
@@ -51,6 +45,23 @@ func main() {
 		w.Write(data)
 	})
 
+	http.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
+		req := &struct {
+			Name string `json:"name"`
+		}{}
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path, req.Name)
+		s := &Schema{}
+		err = util.WriteJSONFile(path, s)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
 	http.HandleFunc("PUT /", func(w http.ResponseWriter, r *http.Request) {
 		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path)
 		s := &Schema{}
@@ -67,16 +78,6 @@ func main() {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-	})
-
-	http.HandleFunc("GET /main.js", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/javascript")
-		fmt.Fprint(w, js)
-	})
-
-	http.HandleFunc("GET /main.css", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/css")
-		fmt.Fprint(w, css)
 	})
 
 	http.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
