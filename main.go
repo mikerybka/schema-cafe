@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mikerybka/util"
 )
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		data, ok := getData(filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path))
+		data, ok := getData(filepath.Join(util.HomeDir(), "schemas", r.URL.Path))
 		if !ok {
 			http.NotFound(w, r)
 			return
@@ -55,7 +56,7 @@ func main() {
 			return
 		}
 		endpoint := filepath.Join(r.URL.Path, req.ID)
-		path := filepath.Join(util.HomeDir(), "schema-cafe/data", endpoint)
+		path := filepath.Join(util.HomeDir(), "schemas", endpoint)
 		s := &Schema{
 			Fields: []Field{},
 		}
@@ -68,7 +69,7 @@ func main() {
 	})
 
 	http.HandleFunc("PUT /", func(w http.ResponseWriter, r *http.Request) {
-		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path)
+		path := filepath.Join(util.HomeDir(), "schemas", r.URL.Path)
 		s := &Schema{}
 		json.NewDecoder(r.Body).Decode(s)
 		err := util.WriteJSONFile(path, s)
@@ -78,7 +79,7 @@ func main() {
 	})
 
 	http.HandleFunc("DELETE /", func(w http.ResponseWriter, r *http.Request) {
-		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path)
+		path := filepath.Join(util.HomeDir(), "schemas", r.URL.Path)
 		err := os.Remove(path)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -112,6 +113,9 @@ func getData(path string) ([]byte, bool) {
 		}
 		data := []DirEntry{}
 		for _, e := range entries {
+			if strings.HasPrefix(e.Name(), ".") {
+				continue
+			}
 			entry := DirEntry{
 				Name: e.Name(),
 			}
