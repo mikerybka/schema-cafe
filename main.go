@@ -113,7 +113,7 @@ func getData(path string) ([]byte, bool) {
 		}
 		data := []DirEntry{}
 		for _, e := range entries {
-			if strings.HasPrefix(e.Name(), ".") {
+			if !strings.HasSuffix(e.Name(), ".json") {
 				continue
 			}
 			entry := DirEntry{
