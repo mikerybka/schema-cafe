@@ -54,12 +54,15 @@ func main() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		path := filepath.Join(util.HomeDir(), "schema-cafe/data", r.URL.Path, req.ID)
+		endpoint := filepath.Join(r.URL.Path, req.ID)
+		path := filepath.Join(util.HomeDir(), "schema-cafe/data", endpoint)
 		s := &Schema{}
 		err = util.WriteJSONFile(path, s)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		w.Header().Set("Location", endpoint)
+		w.WriteHeader(http.StatusCreated)
 	})
 
 	http.HandleFunc("PUT /", func(w http.ResponseWriter, r *http.Request) {
