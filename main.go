@@ -23,7 +23,7 @@ func main() {
 	}
 
 	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		data, ok := getData(filepath.Join(util.HomeDir(), "schemas", r.URL.Path))
+		data, ok := getData(filepath.Join(util.HomeDir(), "schemas", r.URL.Path) + ".json")
 		if !ok {
 			http.NotFound(w, r)
 			return
@@ -69,7 +69,7 @@ func main() {
 	})
 
 	http.HandleFunc("PUT /", func(w http.ResponseWriter, r *http.Request) {
-		path := filepath.Join(util.HomeDir(), "schemas", r.URL.Path)
+		path := filepath.Join(util.HomeDir(), "schemas", r.URL.Path) + ".json"
 		s := &Schema{}
 		json.NewDecoder(r.Body).Decode(s)
 		err := util.WriteJSONFile(path, s)
@@ -79,7 +79,7 @@ func main() {
 	})
 
 	http.HandleFunc("DELETE /", func(w http.ResponseWriter, r *http.Request) {
-		path := filepath.Join(util.HomeDir(), "schemas", r.URL.Path)
+		path := filepath.Join(util.HomeDir(), "schemas", r.URL.Path) + ".json"
 		err := os.Remove(path)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -117,7 +117,7 @@ func getData(path string) ([]byte, bool) {
 				continue
 			}
 			entry := DirEntry{
-				Name: e.Name(),
+				Name: strings.TrimSuffix(e.Name(), ".json"),
 			}
 			if e.IsDir() {
 				entry.Type = "dir"
