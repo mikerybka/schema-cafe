@@ -56,7 +56,9 @@ func main() {
 		}
 		endpoint := filepath.Join(r.URL.Path, req.ID)
 		path := filepath.Join(util.HomeDir(), "schema-cafe/data", endpoint)
-		s := &Schema{}
+		s := &Schema{
+			Fields: []Field{},
+		}
 		err = util.WriteJSONFile(path, s)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
