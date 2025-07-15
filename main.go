@@ -22,8 +22,8 @@ func main() {
 		port = "2069"
 	}
 
-	assetURL := "http://localhost:3001"
-	// assetURL := "https://brass.dev"
+	//assetURL := "http://localhost:3001"
+	assetURL := "https://brass.dev"
 
 	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		data, ok := getData(filepath.Join(util.HomeDir(), "schemas", r.URL.Path))
