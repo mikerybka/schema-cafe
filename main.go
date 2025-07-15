@@ -22,6 +22,9 @@ func main() {
 		port = "2069"
 	}
 
+	assetURL := "http://localhost:3001"
+	// assetURL := "https://brass.dev"
+
 	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		data, ok := getData(filepath.Join(util.HomeDir(), "schemas", r.URL.Path))
 		if !ok {
@@ -33,14 +36,14 @@ func main() {
 			fmt.Fprintf(w, `<!DOCTYPE html>
 	<html>
 	<head>
-	  <link rel="stylesheet" href="https://brass.dev/main.css">
+	  <link rel="stylesheet" href="%s/main.css">
 	</head>
 	<body>
 	  <div id="root"></div>
 	  <script id="data" type="application/json">%s</script>
-	  <script src="https://brass.dev/main.js"></script>
+	  <script src="%s/main.js"></script>
 	</body>
-	</html>`, data)
+	</html>`, assetURL, data, assetURL)
 			return
 		}
 		w.Write(data)
