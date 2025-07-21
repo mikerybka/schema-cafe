@@ -59,7 +59,7 @@ func main() {
 			return
 		}
 		endpoint := filepath.Join(r.URL.Path, req.ID)
-		path := filepath.Join(util.HomeDir(), "schemas", endpoint)
+		path := filepath.Join(util.HomeDir(), "schemas", endpoint) + ".json"
 		s := &Schema{
 			Fields: []Field{},
 		}
