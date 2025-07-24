@@ -2,12 +2,10 @@ package main
 
 import (
 	_ "embed"
-	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/mikerybka/util"
@@ -16,76 +14,87 @@ import (
 //go:embed favicon.ico
 var favicon []byte
 
+type API struct {
+	StorageURL  string
+	StorageUser string
+	StoragePass string
+}
+
+func (api *API) NewRequest(method string, path string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, api.StorageURL+path, body)
+	req.SetBasicAuth(api.StorageUser, api.StoragePass)
+	return req, err
+}
+
+func (api *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	req, err := api.NewRequest(r.Method, strings.TrimPrefix(r.URL.Path, "/api"), r.Body)
+	if err != nil {
+		panic(err)
+	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(res.StatusCode)
+	io.Copy(w, res.Body)
+}
+
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "2069"
+	port := util.RequireEnvVar("PORT")
+	jsURL := util.EnvVar("JS_URL", "https://brass.dev/main.js")
+	cssURL := util.EnvVar("CSS_URL", "https://brass.dev/main.css")
+	storageURL := util.RequireEnvVar("STORAGE_URL")
+	storageUser := os.Getenv("STORAGE_USER")
+	storagePass := os.Getenv("STORAGE_PASS")
+	api := &API{
+		StorageURL:  storageURL,
+		StorageUser: storageUser,
+		StoragePass: storagePass,
 	}
 
-	//assetURL := "http://localhost:3001"
-	assetURL := "https://brass.dev"
+	http.Handle("/api/", api)
 
 	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		data, ok := getData(filepath.Join(util.HomeDir(), "schemas", r.URL.Path))
-		if !ok {
-			http.NotFound(w, r)
+		// Get data from storage
+		req, err := api.NewRequest("GET", r.URL.Path, nil)
+		if err != nil {
+			panic(err)
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			panic(err)
+		}
+
+		// If err, return that
+		if res.StatusCode != 200 {
+			w.WriteHeader(res.StatusCode)
+			http.Error(w, res.Status, res.StatusCode)
 			return
 		}
-		if util.Accept(r, "text/html") {
+
+		// Return data with HTML wrapper if request is from a browser
+		isHTML := util.Accept(r, "text/html")
+		if isHTML {
 			w.Header().Set("Content-Type", "text/html")
 			fmt.Fprintf(w, `<!DOCTYPE html>
-	<html>
+<html>
 	<head>
 	  <link rel="stylesheet" href="%s/main.css">
 	</head>
-	<body>
-	  <div id="root"></div>
-	  <script id="data" type="application/json">%s</script>
+	<body id="body">
+	  <div id="app">Please wait...</div>
+	  <script id="data" type="application/json">`, cssURL)
+		}
+		_, err = io.Copy(w, res.Body)
+		if err != nil {
+			panic(err)
+		}
+		if isHTML {
+			fmt.Fprintf(w, `</script>
 	  <script src="%s/main.js"></script>
 	</body>
-	</html>`, assetURL, data, assetURL)
-			return
-		}
-		w.Write(data)
-	})
-
-	http.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
-		req := &struct {
-			ID string `json:"id"`
-		}{}
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		endpoint := filepath.Join(r.URL.Path, req.ID)
-		path := filepath.Join(util.HomeDir(), "schemas", endpoint) + ".json"
-		s := &Schema{
-			Fields: []Field{},
-		}
-		err = util.WriteJSONFile(path, s)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		w.Header().Set("Location", endpoint)
-		w.WriteHeader(http.StatusCreated)
-	})
-
-	http.HandleFunc("PUT /", func(w http.ResponseWriter, r *http.Request) {
-		path := filepath.Join(util.HomeDir(), "schemas", r.URL.Path) + ".json"
-		s := &Schema{}
-		json.NewDecoder(r.Body).Decode(s)
-		err := util.WriteJSONFile(path, s)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
-
-	http.HandleFunc("DELETE /", func(w http.ResponseWriter, r *http.Request) {
-		path := filepath.Join(util.HomeDir(), "schemas", r.URL.Path) + ".json"
-		err := os.Remove(path)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+</html>`, jsURL)
 		}
 	})
 
@@ -99,80 +108,4 @@ func main() {
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}
-}
-
-func getData(path string) ([]byte, bool) {
-	_, err := os.Stat(path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			s := &Schema{}
-			f, err := os.Open(path + ".json")
-			if err != nil {
-				if errors.Is(err, os.ErrNotExist) {
-					return nil, false
-				}
-				panic(err)
-			}
-			err = json.NewDecoder(f).Decode(s)
-			if err != nil {
-				panic(err)
-			}
-			b, err := json.Marshal(Response{
-				Type:  "schema",
-				Value: s,
-			})
-			if err != nil {
-				panic(err)
-			}
-			return b, true
-		}
-		panic(err)
-	}
-
-	entries, err := os.ReadDir(path)
-	if err != nil {
-		panic(err)
-	}
-	data := []DirEntry{}
-	for _, e := range entries {
-		if !strings.HasSuffix(e.Name(), ".json") {
-			continue
-		}
-		entry := DirEntry{
-			Name: strings.TrimSuffix(e.Name(), ".json"),
-		}
-		if e.IsDir() {
-			entry.Type = "dir"
-		} else {
-			entry.Type = "schema"
-		}
-		data = append(data, entry)
-	}
-	b, err := json.Marshal(Response{
-		Type:  "dir",
-		Value: data,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return b, true
-}
-
-type Response struct {
-	Type  string `json:"type"`
-	Value any    `json:"value"`
-}
-
-type Schema struct {
-	Fields []Field `json:"fields"`
-}
-
-type Field struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
-
-type DirEntry struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
 }
