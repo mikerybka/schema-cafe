@@ -55,7 +55,7 @@ func main() {
 
 	http.Handle("/api/", api)
 
-	http.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Get data from storage
 		req, err := api.NewRequest("GET", r.URL.Path, nil)
 		if err != nil {
@@ -68,7 +68,6 @@ func main() {
 
 		// If err, return that
 		if res.StatusCode != 200 {
-			w.WriteHeader(res.StatusCode)
 			http.Error(w, res.Status, res.StatusCode)
 			return
 		}
@@ -80,7 +79,7 @@ func main() {
 			fmt.Fprintf(w, `<!DOCTYPE html>
 <html>
 	<head>
-	  <link rel="stylesheet" href="%s/main.css">
+	  <link rel="stylesheet" href="%s">
 	</head>
 	<body id="body">
 	  <div id="app">Please wait...</div>
@@ -92,7 +91,7 @@ func main() {
 		}
 		if isHTML {
 			fmt.Fprintf(w, `</script>
-	  <script src="%s/main.js"></script>
+	  <script src="%s"></script>
 	</body>
 </html>`, jsURL)
 		}
